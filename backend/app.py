@@ -24,7 +24,7 @@ def create_app():
     )
 
     # Secure session secret key
-    app.config["SECRET_KEY"] = "student_expense_tracker_fyp_2026_super_secret_key"
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "student_expense_tracker_fyp_2026_super_secret_key")
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
@@ -149,7 +149,9 @@ def create_app():
 
     return app
 
+# Global Flask application instance for external WSGI servers (e.g., gunicorn backend.app:app)
+app = create_app()
+
 if __name__ == "__main__":
-    app = create_app()
     print("Starting Student Expense Tracker on http://127.0.0.1:5000 ...")
     app.run(debug=True, host="127.0.0.1", port=5000)
