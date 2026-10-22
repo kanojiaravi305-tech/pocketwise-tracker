@@ -1,0 +1,182 @@
+{% extends "layout.html" %}
+
+{% block title %}Shared Expenses & Group Split{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+        <div>
+            <h4 class="fw-bold mb-1">Shared Expenses & Group Split</h4>
+            <p class="text-muted mb-0" style="font-size: 0.88rem;">
+                Flat equal-split calculator for shared team lunches, flat utilities, group trips, and shared bills with 1-click payment settlement.
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-light text-secondary border px-2 py-1">
+                <i class="bi bi-people text-primary me-1"></i>Flat Equal Split Algorithm
+            </span>
+        </div>
+    </div>
+
+    <!-- 3 Summary Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="stat-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-title">Total Lent on Splits</div>
+                    <div class="stat-value text-primary" id="statTotalLent">₹0.00</div>
+                    <small class="text-muted" style="font-size: 0.75rem;">Across all shared bills</small>
+                </div>
+                <div class="stat-icon" style="background-color: #ecfdf5; color: #059669;">
+                    <i class="bi bi-send"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="stat-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-title">Recovered (Paid Back)</div>
+                    <div class="stat-value text-success" id="statTotalRecovered">₹0.00</div>
+                    <small class="text-muted" style="font-size: 0.75rem;">Successfully settled</small>
+                </div>
+                <div class="stat-icon" style="background-color: #d1e7dd; color: #198754;">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="stat-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-title">Pending Recovery</div>
+                    <div class="stat-value text-danger" id="statTotalPending">₹0.00</div>
+                    <small class="text-muted" style="font-size: 0.75rem;" id="statPendingCount">0 pending claims</small>
+                </div>
+                <div class="stat-icon" style="background-color: #f8d7da; color: #dc3545;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2-Column Layout: Split Calculator on Left, Active Splits on Right -->
+    <div class="row g-4">
+        <!-- Left: Split Form & Equal Calculator -->
+        <div class="col-12 col-lg-5">
+            <div class="card-custom">
+                <div class="card-header">
+                    <span><i class="bi bi-calculator text-primary me-2"></i>Split a Shared Expense</span>
+                </div>
+                <div class="p-3 pb-0">
+                    <div class="d-flex align-items-center gap-3 p-2 rounded bg-light border">
+                        <img src="{{ url_for('static', filename='img/split_bills.jpg') }}" alt="Split Bills with Colleagues and Friends" class="rounded shadow-sm" style="width: 72px; height: 72px; object-fit: cover;">
+                        <div>
+                            <div class="fw-bold small text-dark">Group Living &amp; Dining</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">Evenly split bills among housemates, team lunches, or travel companions and track settlements.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="splitFormAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                    <form id="splitBillForm">
+                        <div class="mb-3">
+                            <label for="splitTitle" class="form-label small fw-semibold">Bill Title / Occasion *</label>
+                            <input type="text" class="form-control form-control-sm" id="splitTitle" placeholder="e.g. Team Lunch, Monthly Wi-Fi Bill, Road Trip Fuel" required>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="splitTotalAmount" class="form-label small fw-semibold">Total Bill (INR) *</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" step="1" min="1" class="form-control" id="splitTotalAmount" placeholder="1200" required>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label for="splitCategory" class="form-label small fw-semibold">Category *</label>
+                                <select class="form-select form-select-sm" id="splitCategory" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="splitFriends" class="form-label small fw-semibold">Contacts / Members (Comma-separated) *</label>
+                            <input type="text" class="form-control form-control-sm" id="splitFriends" placeholder="e.g. Vikram Rao, Neha Sharma, Amit Patel" required>
+                            <div class="form-text small text-muted">Enter contact or member names separated by commas.</div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="includeSelfCheck" checked>
+                            <label class="form-check-label small" for="includeSelfCheck">
+                                Include myself in the split (Total people = members + you)
+                            </label>
+                        </div>
+
+                        <!-- Live Flat Equal Split Preview Box -->
+                        <div class="p-3 bg-light border rounded mb-3" id="splitPreviewBox">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small text-muted fw-semibold">Equal Split Calculation:</span>
+                                <span class="badge bg-primary" id="splitPeopleCountBadge">1 person</span>
+                            </div>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <span class="fs-4 fw-bold text-dark" id="splitShareAmount">₹0.00</span>
+                                <span class="small text-muted">per person</span>
+                            </div>
+                            <div class="small text-muted mt-1" id="splitFormulaText">Enter amount and members to calculate.</div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="splitPaymentMode" class="form-label small fw-semibold">Payment Mode</label>
+                                <select class="form-select form-select-sm" id="splitPaymentMode">
+                                    <option value="UPI">UPI</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card">Card</option>
+                                    <option value="Net Banking">Net Banking</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label for="splitDate" class="form-label small fw-semibold">Date</label>
+                                <input type="date" class="form-control form-control-sm" id="splitDate">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm w-100 py-2 fw-semibold" id="createSplitBtn">
+                            <i class="bi bi-check2-all me-1"></i>Create Split Bill & Track Shares
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Active Splits & Settlement Records -->
+        <div class="col-12 col-lg-7">
+            <div class="card-custom">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span><i class="bi bi-card-checklist text-success me-2"></i>Bill Splits & Settlements</span>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" id="filterSplitAll" onclick="setSplitFilter('all')">All</button>
+                        <button type="button" class="btn btn-outline-secondary" id="filterSplitPending" onclick="setSplitFilter('pending')">Pending</button>
+                        <button type="button" class="btn btn-outline-secondary" id="filterSplitSettled" onclick="setSplitFilter('settled')">Settled</button>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <div id="splitsListContainer">
+                        <div class="text-center py-5 text-muted">
+                            <span class="spinner-border spinner-border-sm me-1"></span>Loading bill splits...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/split.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends "layout.html" %}
+
+{% block title %}Financial Advisor & Spending Insights{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+        <div>
+            <h4 class="fw-bold mb-1">
+                <i class="bi bi-lightbulb text-warning me-2"></i>Financial Advisor
+            </h4>
+            <p class="text-muted mb-0" style="font-size: 0.88rem;">
+                Heuristic spending diagnostics, runway alerts, 50/30/20 rule breakdown, and purchase simulation for <span class="fw-semibold text-dark" id="advisorMonthLabel">Current Month</span>.
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-light text-secondary border px-3 py-2">
+                <i class="bi bi-robot text-primary me-1"></i>Rule-Based Decision Support System
+            </span>
+        </div>
+    </div>
+
+    <!-- 4 Health Score & Predictive Metric Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Card 1: Budget Health Score -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="stat-card d-flex align-items-center justify-content-between h-100">
+                <div>
+                    <div class="stat-title">Budget Health Score</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="fs-2 fw-bold text-dark" id="statHealthScore">--</span>
+                        <span class="text-muted small">/ 100</span>
+                    </div>
+                    <span class="badge bg-secondary" id="statScoreBadge" style="font-size: 0.75rem;">Evaluating...</span>
+                </div>
+                <div class="stat-icon" style="background-color: #f8f9fa; color: #ffc107;">
+                    <i class="bi bi-speedometer2" id="scoreIcon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Projected Next Month Spend (Predictive Math) -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="stat-card d-flex align-items-center justify-content-between h-100">
+                <div>
+                    <div class="stat-title">Projected Next Month Spend</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="fs-4 fw-bold text-dark" id="statProjectedSpend">₹0.00</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                        <span class="badge bg-light text-secondary border" id="statProjectedTrend" style="font-size: 0.72rem;">Calculating...</span>
+                    </div>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Linear Regression ($y=mx+c$) & WMA</small>
+                </div>
+                <div class="stat-icon" style="background-color: #e8f5e9; color: #2e7d32;">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Safe Daily Spending Limit -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="stat-card d-flex align-items-center justify-content-between h-100">
+                <div>
+                    <div class="stat-title">Safe Daily Spending Limit</div>
+                    <div class="stat-value text-primary" id="statSafeDaily">₹0.00</div>
+                    <small class="text-muted" style="font-size: 0.75rem;" id="statDaysLeftText">0 days left in month</small>
+                </div>
+                <div class="stat-icon" style="background-color: #ecfdf5; color: #059669;">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Current Burn Velocity -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="stat-card d-flex align-items-center justify-content-between h-100">
+                <div>
+                    <div class="stat-title">Current Burn Velocity</div>
+                    <div class="stat-value text-danger" id="statActualBurn">₹0.00 / day</div>
+                    <small class="text-muted" style="font-size: 0.75rem;" id="statRunwayText">Calculating runway...</small>
+                </div>
+                <div class="stat-icon" style="background-color: #f8d7da; color: #dc3545;">
+                    <i class="bi bi-fire"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2-Column: Left Side AI/Predictive Analytics, Right Side 50/30/20 & Simulator -->
+    <div class="row g-4 mb-4">
+        <!-- Left: Smart Financial Audit, Anomaly Detection & Rule Recommendations -->
+        <div class="col-12 col-lg-7">
+            <!-- 1. Smart Financial Audit (Gemini AI with Offline Fallback) -->
+            <div class="card-custom mb-4">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="bi bi-robot text-primary fs-5"></i>
+                        <span class="fw-bold">Smart Financial Audit</span>
+                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-muted border" id="auditSourceBadge" style="font-size: 0.72rem;">
+                            <i class="bi bi-shield-check text-success me-1"></i>Offline Safe Fallback
+                        </span>
+                        <button class="btn btn-sm btn-outline-primary fw-semibold" id="generateAuditBtn">
+                            <i class="bi bi-stars me-1"></i>Generate Smart Audit
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <div id="smartAuditContainer">
+                        <div class="text-center py-4 text-muted">
+                            <span class="spinner-border spinner-border-sm me-1"></span>Ready to run smart financial audit...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Statistical Anomaly Detection (>25% Spike) -->
+            <div class="card-custom mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                        <span class="fw-bold">Expense Anomaly Detection</span>
+                    </span>
+                    <span class="badge bg-light text-danger border" style="font-size: 0.72rem;">
+                        Threshold: &gt;25% Above Historical Baseline
+                    </span>
+                </div>
+                <div class="card-body p-3">
+                    <div id="anomaliesContainer">
+                        <div class="text-center py-3 text-muted">
+                            <span class="spinner-border spinner-border-sm me-1"></span>Scanning spending patterns for anomalies...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Actionable Rule-Based Recommendations -->
+            <div class="card-custom mb-0">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-lightning-charge text-primary me-2"></i>Actionable Spending Guidance</span>
+                    <small class="text-muted">Real-Time Spending Analysis</small>
+                </div>
+                <div class="card-body p-3">
+                    <div id="recommendationsContainer">
+                        <div class="text-center py-4 text-muted">
+                            <span class="spinner-border spinner-border-sm me-1"></span>Generating diagnostic insights...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: 50/30/20 Rule Analyzer & Interactive Purchase Simulator -->
+        <div class="col-12 col-lg-5">
+            <!-- 50/30/20 Rule Card -->
+            <div class="card-custom mb-3">
+                <div class="card-header">
+                    <span><i class="bi bi-pie-chart text-success me-2"></i>50/30/20 Budgeting Rule</span>
+                </div>
+                <div class="card-body p-3">
+                    <p class="text-muted small mb-3">
+                        Ideal standard: <strong>50% Needs</strong> (Housing, Groceries, Utilities, Commute), <strong>30% Wants</strong> (Dining, Shopping), and <strong>20% Savings & Investments</strong>.
+                    </p>
+
+                    <!-- Needs Progress -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><strong class="text-primary">Needs</strong> (Housing, Groceries, Commute, Bills)</span>
+                            <span id="needsPercentText">0% / 50%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" id="needsProgressBar" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Wants Progress -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><strong class="text-warning text-dark">Wants</strong> (Shopping & Lifestyle, Dining Out)</span>
+                            <span id="wantsPercentText">0% / 30%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" id="wantsProgressBar" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Buffer Progress -->
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><strong class="text-success">Savings & Buffer</strong> (Investments & Unspent)</span>
+                            <span id="bufferPercentText">0% / 20%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" id="bufferProgressBar" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- "Can I Afford It?" Interactive Purchase Simulator -->
+            <div class="card-custom mb-0">
+                <div class="card-header">
+                    <span><i class="bi bi-calculator-fill text-primary me-2"></i>"Can I Afford It?" Purchase Simulator</span>
+                </div>
+                <div class="card-body p-3">
+                    <p class="text-muted small mb-3">
+                        Simulate an upcoming planned purchase to evaluate its impact on your safe daily spending budget.
+                    </p>
+
+                    <form id="simulatorForm">
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Purchase Title</label>
+                            <input type="text" class="form-control form-control-sm" id="simTitle" placeholder="e.g. Ergonomic Office Chair, Weekend Getaway, Tech Accessory" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Estimated Cost (INR)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" step="1" min="1" class="form-control" id="simAmount" placeholder="2500" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold" id="simulateBtn">
+                            <i class="bi bi-lightning-charge me-1"></i>Evaluate Affordability
+                        </button>
+                    </form>
+
+                    <!-- Simulation Result Container -->
+                    <div id="simResultContainer" class="mt-3 d-none">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/advisor.js') }}"></script>
+{% endblock %}
